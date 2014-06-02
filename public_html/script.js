@@ -23,7 +23,7 @@ MapTypeId = localStorage['MapTypeId'] || CONST_MAPTYPEID;
 var lastOsmTileUrlFormat = OsmTileUrlFormat;
 
 function fetchData() {
-	$.getJSON(AjaxServerUrlPrefix + 'data.json').done(function(data) {
+	$.getJSON(AjaxPlanesUrl).done(function(data) {
 		PlanesOnMap = 0
 		SpecialSquawk = false;
 

@@ -38,4 +38,4 @@ PlaneTtl		= 58; // remove from list if plane was not seen for <sec>
 PlaneDeleteTtl	= 300; // remove plane from memory if not seen for <sec>
 
 // -- Server Settings -------------------------------------
-AjaxServerUrlPrefix	= '/dump1090';
+AjaxPlanesUrl	= '/dump1090/data.json';
