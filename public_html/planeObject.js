@@ -36,6 +36,7 @@ var planeObject = {
 	// When was this last updated?
 	updated		: null,
 	reapable	: false,
+	since		: null,
 
 	// Appends data to the running track so we can get a visual tail on the plane
 	// Only useful for a long running browser session.
@@ -169,6 +170,10 @@ var planeObject = {
 			this.icao	= data.hex;
 			this.messages	= data.messages;
 			this.seen	= data.seen;
+			if (this.since === null){
+				// When we first saw plane, and earlier if previously seen
+				this.since = new Date().getTime() - (data.seen * 1000);
+			}
 
 			var updVal = function(t, d, fn, n, dn){
 				var dna = (typeof(dn) === 'undefined' ? n : dn);

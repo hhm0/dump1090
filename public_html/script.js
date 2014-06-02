@@ -468,7 +468,8 @@ function refreshTableInfo() {
 	appendHeaderField('4', 'Speed');
 	appendHeaderField('5', 'Track');
 	appendHeaderField('6', 'Msgs');
-	appendHeaderField('7', 'Seen');
+	appendHeaderField('7', 'Since');
+	appendHeaderField('8', 'Seen');
 	var tbody = $('<tbody>').appendTo(table);
 	for (var tablep in Planes) {
 		var tableplane = Planes[tablep]
@@ -541,6 +542,8 @@ function refreshTableInfo() {
 				field.text('\u00a0');
     	    }
 			newRField().text(tableplane.messages);
+			var seen_since = Math.round((new Date().getTime() - tableplane.since) / 1000);
+			newRField().text(Math.floor(seen_since/60) + '.' + ((seen_since % 60) >= 10 ? '' : '0') + seen_since%60);
 			newRField().text(tableplane.seen);
 		}
 	}
