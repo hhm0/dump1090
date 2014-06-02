@@ -20,13 +20,10 @@ ZoomLvl   = Number(localStorage['ZoomLvl']) || CONST_ZOOMLVL;
 ZoomLvl   = Number(localStorage['ZoomLvl']) || CONST_ZOOMLVL;
 MapTypeId = localStorage['MapTypeId'] || CONST_MAPTYPEID;
 
-// Render some URL strings
-AjaxPlaneUrl = AjaxServerUrlFormat.replace('{s}', '/data.json');
-
 var lastOsmTileUrlFormat = OsmTileUrlFormat;
 
 function fetchData() {
-	$.getJSON(AjaxPlaneUrl).done(function(data) {
+	$.getJSON(AjaxServerUrlPrefix + 'data.json').done(function(data) {
 		PlanesOnMap = 0
 		SpecialSquawk = false;
 
