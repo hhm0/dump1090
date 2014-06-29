@@ -248,6 +248,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Failed to connect to %s:%d\n", View1090.net_input_beast_ipaddr, Modes.net_input_beast_port);
         exit(1);
     }
+    anetNonBlock(Modes.aneterr, fd);
     //
     // Setup a service callback client structure for a beast binary input (from dump1090)
     // This is a bit dodgy under Windows. The fd parameter is a handle to the internet
