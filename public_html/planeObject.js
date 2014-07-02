@@ -170,20 +170,29 @@ var planeObject = {
 			this.messages	= data.messages;
 			this.seen	= data.seen;
 
-			var updVal = function(t, d, fn, n, dn){
-				var dna = (typeof(dn) === 'undefined' ? n : dn);
-				if (fn(d, t[n], d[dna], t[n])){
-					t[n]=d[dna];
+			var updVal = function(plane, datafield, datavaldefault, planefield, validfield){
+				var pf = ((typeof(planefield) === 'undefined') ? datafield : planefield);
+				var vf = ((typeof(validfield) === 'undefined') ? ('valid' + datafield) : validfield);
+				var dvd = ((typeof(datavaldefault) === 'undefined') ? 0 : datavaldefault);
+				if ((datafield in data) && ((vf in data) ? (data[vf]) : (data[datafield] !== dvd))){ // data is valid
+					plane[pf] = data[datafield];
+					is_valid = true;
+					data[vf] = true;
+				} else {
+					if (plane[pf] === null){ // initialize plane val
+						plane[pf] = dvd;
+					}
+					data[vf] = false;
 				}
+//					console.log('pf '+ pf+';vf '+vf+';dvd '+dvd+';pfv '+plane[pf]+';vfv '+data[vf]+';df '+datafield+';dfv '+data[datafield]);
 			};
-			// Update these if they are being initialized, or if they contain valid data
-			updVal(this, data, function(d, tn){return (tn === null || d.validaltitude !== 0);}, 'altitude');
-			updVal(this, data, function(d, tn){return (tn === null || d.validspeed !== 0);}, 'speed');
-			updVal(this, data, function(d, tn){return (tn === null || d.validtrack !== 0);}, 'track');
-			updVal(this, data, function(d, tn){return (tn === null || d.validposition !== 0);}, 'latitude', 'lat');
-			updVal(this, data, function(d, tn){return (tn === null || d.validposition !== 0);}, 'longitude', 'lon');
-			updVal(this, data, function(d, tn, dn){return (tn === null || dn !== '');}, 'flight');
-			updVal(this, data, function(d, tn, dn){return (tn === null || dn !== "0000");}, 'squawk');
+			updVal(this, 'altitude');
+			updVal(this, 'speed');
+			updVal(this, 'track');
+			updVal(this, 'lat', 0, 'latitude', 'validposition');
+			updVal(this, 'lon', 0, 'longitude', 'validposition');
+			updVal(this, 'flight', '');
+			updVal(this, 'squawk', '0000');
 
 			// If no packet in over <PlaneTtl> seconds, consider the plane reapable
 			// This way we can hold it, but not show it just in case the plane comes back
