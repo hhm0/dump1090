@@ -146,7 +146,7 @@ var planeObject = {
 
 
 	// For planes from whom we did not get data lately
-	funcUpdateOldPlane	: function(){
+	funcUpdateStalePlane	: function(){
 			var ms = new Date().getTime();
 			var seen = Math.round((ms - this.updated) / 1000);
 			if (seen > PlaneTtl){
