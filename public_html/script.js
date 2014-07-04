@@ -24,34 +24,21 @@ var lastOsmTileUrlFormat = OsmTileUrlFormat;
 
 function fetchData() {
 	$.getJSON(AjaxPlanesUrl).done(function(data) {
+		var added_planes = [];
+		var modified_planes = [];
+
 		PlanesOnMap = 0
 		SpecialSquawk = false;
-
-		if (data.length < PlanesOnTable){
-			// Some of the planes were not sent and should be made reapable
-			for (p in Planes) {
-				if (Planes.hasOwnProperty(p) && (!Planes[p].reapable)){
-					var contains_plane = false;
-					for (var j=0; j < data.length; j++) {
-						if (data[j].hex == p){
-							contains_plane = true;
-							break;
-						}
-					}
-					if (!contains_plane){
-						Planes[p].funcUpdateOldPlane();
-					}
-				}
-			}
-		}
 		
 		// Loop through all the planes in the data packet
 		for (var j=0; j < data.length; j++) {
 			// Do we already have this plane object in Planes?
 			// If not make it.
 			if (Planes[data[j].hex]) {
+				modified_planes.push(data[j].hex);
 				var plane = Planes[data[j].hex];
 			} else {
+				added_planes.push(data[j].hex);
 				var plane = jQuery.extend(true, {}, planeObject);
 			}
 			
@@ -70,6 +57,15 @@ function fetchData() {
 			
 			// Copy the plane into Planes
 			Planes[plane.icao] = plane;
+		}
+
+		// planes which were not sent ("stale") should be made reapable
+		for (p in Planes) {
+			if (Planes.hasOwnProperty(p) && (!Planes[p].reapable)){
+				if (($.inArray(p, modified_planes) === -1) && ($.inArray(p, added_planes) === -1)) {
+					Planes[p].funcUpdateOldPlane();
+				}
+			}
 		}
 
 		PlanesOnTable = data.length;
