@@ -61,9 +61,9 @@ function fetchData() {
 
 		// planes which were not sent ("stale") should be made reapable
 		for (p in Planes) {
-			if (Planes.hasOwnProperty(p) && (!Planes[p].reapable)){
-				if (($.inArray(p, modified_planes) === -1) && ($.inArray(p, added_planes) === -1)) {
-					Planes[p].funcUpdateOldPlane();
+			if (Planes.hasOwnProperty(p)) {
+				if ((!Planes[p].reapable) && ($.inArray(p, modified_planes) === -1) && ($.inArray(p, added_planes) === -1)) {
+					Planes[p].funcUpdateStalePlane();
 				}
 			}
 		}
@@ -71,8 +71,10 @@ function fetchData() {
 		PlanesOnTable = data.length;
 	}).fail(function() {
 		for (p in Planes) {
-			if (Planes.hasOwnProperty(p) && (!Planes[p].reapable)){
-				Planes[p].funcUpdateOldPlane();
+			if (Planes.hasOwnProperty(p)) {
+				if (!Planes[p].reapable) {
+					Planes[p].funcUpdateStalePlane();
+				}
 			}
 		}
 	});
