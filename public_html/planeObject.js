@@ -174,17 +174,20 @@ var planeObject = {
 				var pf = ((typeof(planefield) === 'undefined') ? datafield : planefield);
 				var vf = ((typeof(validfield) === 'undefined') ? ('valid' + datafield) : validfield);
 				var dvd = ((typeof(datavaldefault) === 'undefined') ? 0 : datavaldefault);
-				if ((datafield in data) && ((vf in data) ? (data[vf]) : (data[datafield] !== dvd))){ // data is valid
-					plane[pf] = data[datafield];
-					is_valid = true;
-					data[vf] = true;
+				var df = datafield;
+				var is_data_valid;
+				if ((df in data) && ((vf in data) ? Boolean(data[vf]) : (data[df] !== dvd))){
+					is_data_valid = true;
+					plane[pf] = data[df];
 				} else {
-					if (plane[pf] === null){ // initialize plane val
+					is_data_valid = false;
+					if (plane[pf] === null){
 						plane[pf] = dvd;
 					}
-					data[vf] = false;
 				}
-//					console.log('pf '+ pf+';vf '+vf+';dvd '+dvd+';pfv '+plane[pf]+';vfv '+data[vf]+';df '+datafield+';dfv '+data[datafield]);
+				if (!(vf in data)) {
+					data[vf] = is_data_valid;
+				}
 			};
 			updVal(this, 'altitude');
 			updVal(this, 'speed');
