@@ -163,7 +163,7 @@ var planeObject = {
 			var oldlat 	= this.latitude;
 			var oldlon	= this.longitude;
 			var oldalt	= this.altitude;
-			var validities = {};
+			var all_data_is_valids = {};
 
 			// Update all of our data
 			this.updated	= new Date().getTime();
@@ -171,32 +171,31 @@ var planeObject = {
 			this.messages	= (('messages' in data) ? data.messages : ((this.messages === null) ? 1 : this.messages + 1));
 			this.seen	= (('seen' in data) ? data.seen : 0);
 
-			var updVal = function(plane, datafield, setvaldefault, invalid_val_chk, planefield, validfield){
-				var df = datafield;
-				var pf = ((typeof(planefield) === 'undefined') ? datafield : planefield);
-				var vf = ((typeof(validfield) === 'undefined') ? ('valid' + datafield) : validfield);
-				var svd = ((typeof(setvaldefault) === 'undefined') ? 0 : setvaldefault);
-				var validity;
-				if ((df in data) && ((vf in data) ? Boolean(data[vf]) : ((typeof(invalid_val_chk) === 'undefined') || ((invalid_val_chk === 'cmp') ? (data[df] !== invalid_val_chk) : true)))) {
-					validity = true;
-					plane[pf] = data[df];
+			var copyVal = function(plane, datafield, svd, invalid_val_chk, pf, vf) {
+				var planefield = ((typeof(pf) === 'undefined') ? datafield : pf);
+				var validfield = ((typeof(vf) === 'undefined') ? ('valid' + datafield) : vf);
+				var setvaldefault = ((typeof(svd) === 'undefined') ? 0 : svd);
+				var data_is_valid;
+				if ((datafield in data) && ((validfield in data) ? Boolean(data[validfield]) : ((typeof(invalid_val_chk) === 'undefined') ? true : (Boolean(invalid_val_chk) ? (data[datafield] !== setvaldefault) : false)))) {
+					plane[planefield] = data[datafield];
+					data_is_valid = true;
 				} else {
-					validity = false;
-					if (plane[pf] === null){
-						plane[pf] = svd;
+					if (plane[planefield] === null){
+						plane[planefield] = setvaldefault;
 					}
+					data_is_valid = false;
 				}
 				if (typeof(invalid_val_chk) === 'undefined') {
-					validities[df] = validity;
+					all_data_is_valids[datafield] = data_is_valid;
 				}
 			};
-			updVal(this, 'altitude');
-			updVal(this, 'speed');
-			updVal(this, 'track');
-			updVal(this, 'lat', 0, undefined, 'latitude', 'validposition');
-			updVal(this, 'lon', 0, undefined, 'longitude', 'validposition');
-			updVal(this, 'flight', '', 'cmp');
-			updVal(this, 'squawk', '0000', 'cmp');
+			copyVal(this, 'altitude');
+			copyVal(this, 'speed');
+			copyVal(this, 'track');
+			copyVal(this, 'lat', 0, undefined, 'latitude', 'validposition');
+			copyVal(this, 'lon', 0, undefined, 'longitude', 'validposition');
+			copyVal(this, 'flight', '', true);
+			copyVal(this, 'squawk', '0000', true);
 
 			// If no packet in over <PlaneTtl> seconds, consider the plane reapable
 			// This way we can hold it, but not show it just in case the plane comes back
@@ -210,7 +209,7 @@ var planeObject = {
 			}
 
 			// Is the position valid?
-			if ((data.validposition == 1 || (validities.lat && validities.lon)) && (this.reapable == false)) {
+			if ((data.validposition == 1 || (all_data_is_valids.lat && all_data_is_valids.lon)) && (this.reapable == false)) {
 				this.vPosition = true;
 
 				// Detect if the plane has moved
@@ -240,10 +239,10 @@ var planeObject = {
 			}
 
 			// Do we have a valid track for the plane?
-			this.vTrack = (data.validtrack == 1 || validities.track);
+			this.vTrack = (data.validtrack == 1 || all_data_is_valids.track);
 
-			this.vSpeed = (data.validspeed === 1 || data.validspeed === true || validities.speed);
-			this.vAltitude = ((data.validaltitude === 1 || data.validaltitude === true) ? true : (data.validaltitude === -1 ? '' : validities.altitude));
+			this.vSpeed = (data.validspeed === 1 || data.validspeed === true || all_data_is_valids.speed);
+			this.vAltitude = ((data.validaltitude === 1 || data.validaltitude === true) ? true : (data.validaltitude === -1 ? '' : all_data_is_valids.altitude));
 			if (this.vAltitude === ''){
 				this.altitude = 'grnd';
 			}
