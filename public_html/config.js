@@ -16,7 +16,7 @@ CONST_CENTERLON = 9.0;
 // The google maps zoom level, 0 - 16, lower is further out
 CONST_ZOOMLVL   = 5;
 // The Openstreetmap tile URL template
-OsmTileUrlFormat	= 'http://tile.openstreetmap.org/{z}/{x}/{y}.png';
+OsmTileUrlFormat	= 'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 // -- Marker settings -------------------------------------
 // The default marker color
