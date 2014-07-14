@@ -629,11 +629,10 @@ char *aircraftsToJson(int *len) {
             track = 1;
         }
         
-        if (a->bFlags & MODES_ACFLAGS_ALTITUDE_VALID) {
-			altitude = 1;
-		} else if ((a->bFlags & MODES_ACFLAGS_AOG_VALID) && (a->bFlags & MODES_ACFLAGS_AOG)) {
-			altitude = -1;
-        }
+        altitude = (((a->bFlags & MODES_ACFLAGS_AOG_GROUND) == MODES_ACFLAGS_AOG_GROUND) 
+            ? -1 
+            : ((a->bFlags & MODES_ACFLAGS_ALTITUDE_VALID) ? 1 : 0))
+			;
         
         if (a->bFlags & MODES_ACFLAGS_SPEED_VALID) {
             speed = 1;
