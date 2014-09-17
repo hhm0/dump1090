@@ -717,6 +717,7 @@ int handleHTTPRequest(struct client *c, char *p) {
     char hdr[512];
     int clen, hdrlen;
     int httpver, keepalive;
+    int statuscode = 500;
     char *url, *content;
     char ctype[48];
     char getFile[1024];
@@ -759,6 +760,7 @@ int handleHTTPRequest(struct client *c, char *p) {
     // "/" -> Our google map application.
     // "/data.json" -> Our ajax request to update planes.
     if (strstr(url, "/data.json")) {
+        statuscode = 200;
         content = aircraftsToJson(&clen);
         //snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_JSON);
     } else {
@@ -770,14 +772,13 @@ int handleHTTPRequest(struct client *c, char *p) {
         hrp = realpath(HTMLPATH, NULL);
         hrp = (hrp ? hrp : HTMLPATH);
         clen = -1;
-        content = "Server error";
+        content = strdup("Server error occured");
         if (rp && (!strncmp(hrp, rp, strlen(hrp)))) {
             if (stat(getFile, &sbuf) != -1 && (fd = open(getFile, O_RDONLY)) != -1) {
-                content = (char *) malloc(sbuf.st_size);
+                content = (char *) realloc(content, sbuf.st_size);
                 if (read(fd, content, sbuf.st_size) != -1) {
                     clen = sbuf.st_size;
-				} else {
-					free(content);
+                    statuscode = 200;
                 }
             }
         } else {
@@ -786,8 +787,9 @@ int handleHTTPRequest(struct client *c, char *p) {
 
         if (clen < 0) {
             char buf[128];
-            clen = snprintf(buf,sizeof(buf),"Error opening HTML file: %s", strerror(errno));
-            content = strdup(buf);
+            content = realloc(content, sizeof(buf));
+            clen = snprintf(content,sizeof(buf),"Error opening HTML file: %s", strerror(errno));
+            statuscode = 404;
         }
         
         if (fd != -1) {
@@ -811,7 +813,7 @@ int handleHTTPRequest(struct client *c, char *p) {
 
     // Create the header and send the reply
     hdrlen = snprintf(hdr, sizeof(hdr),
-        "HTTP/1.1 200 OK\r\n"
+        "HTTP/1.1 %d \r\n"
         "Server: Dump1090\r\n"
         "Content-Type: %s\r\n"
         "Connection: %s\r\n"
@@ -819,6 +821,7 @@ int handleHTTPRequest(struct client *c, char *p) {
         "Cache-Control: no-cache, must-revalidate\r\n"
         "Expires: Sat, 26 Jul 1997 05:00:00 GMT\r\n"
         "\r\n",
+        statuscode,
         ctype,
         keepalive ? "keep-alive" : "close",
         clen);
