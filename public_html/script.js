@@ -162,8 +162,12 @@ function initialize() {
 		center: new google.maps.LatLng(CenterLat, CenterLon),
 		zoom: ZoomLvl,
 		mapTypeId: google.maps.MapTypeId.ROADMAP,
+		mapTypeControl: true,
+		streetViewControl: false,
 		mapTypeControlOptions: {
-			mapTypeIds: mapTypeIds
+			mapTypeIds: mapTypeIds,
+			position: google.maps.ControlPosition.TOP_LEFT,
+			style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
 		}
 	};
 
@@ -357,7 +361,7 @@ function refreshSelected() {
 	var row = newRow();
 	var val = 'Track: ';
 	if (selected && selected.vTrack) {
-	    val += selected.track + ' (' + normalizeTrack(selected.track, selected.vTrack)[1] +')';
+	    val += selected.track + '&deg;' + ' (' + normalizeTrack(selected.track, selected.vTrack)[1] +')';
 	} else {
 	    val += 'n/a';
 	}
