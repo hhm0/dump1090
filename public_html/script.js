@@ -361,7 +361,7 @@ function refreshSelected() {
 	var row = newRow();
 	var val = 'Track: ';
 	if (selected && selected.vTrack) {
-	    val += selected.track + '&deg;' + ' (' + normalizeTrack(selected.track, selected.vTrack)[1] +')';
+	    val += selected.track + '\u00b0 (' + normalizeTrack(selected.track, selected.vTrack)[1] +')';
 	} else {
 	    val += 'n/a';
 	}
