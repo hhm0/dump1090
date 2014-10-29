@@ -459,7 +459,7 @@ function refreshTableInfo() {
 	var appendHeaderField = function(fieldid, fieldlabel, adid){
 		var adid_out = ((typeof(adid) === 'undefined') ? fieldid : adid);
 		return $('<td>')
-+			.click(function(){setASC_DESC(adid_out); sortTable('tableinfo', fieldid)})
+			.click(function(){setASC_DESC(adid_out); sortTable('tableinfo', fieldid)})
 			.prop('align', 'right')
 			.text(fieldlabel)
 			.appendTo(thead)
