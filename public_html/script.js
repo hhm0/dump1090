@@ -314,6 +314,7 @@ function refreshSelected() {
 		field.append($('<span>').addClass('squawk7700').text('\u00a0Squawking: General Emergency\u00a0'));
 	} else if (selected && selected.flight != '') {
 		field.append($('<a>').prop('href', 'http://www.flightstats.com/go/FlightStatus/flightStatusByFlight.do?flightNumber=' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FlightStats]'));
+		field.append($('<a>').prop('href', 'http://www.fr24.com/' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FR24]'));
 	}
 	
 	var row = newRow();
@@ -387,11 +388,11 @@ function refreshSelected() {
                 dist /= 1852;
             }
             dist = (Math.round((dist)*10)/10).toFixed(1);
-			newField(newRow()).prop('colspan', columns).text('Distance from Site: ' + dist + (Metric ? ' km' : ' NM'))
+			newField(newRow()).prop('colspan', columns).prop('align', 'center').text('Distance from Site: ' + dist + (Metric ? ' km' : ' NM'))
         } // End of SiteShow
 	} else {
 	    if (SiteShow) {
-			newField(newRow()).prop('colspan', columns).text('Distance from Site: n/a ' + (Metric ? ' km' : ' NM'));
+			newField(newRow()).prop('colspan', columns).prop('align', 'center').text('Distance from Site: n/a ' + (Metric ? ' km' : ' NM'));
 	    } else {
     	    val += 'n/a';
 			field.text(val);
@@ -455,9 +456,10 @@ function normalizeTrack(track, valid){
 function refreshTableInfo() {
 	var table = $('<table>').prop('id', 'tableinfo').prop('width', '100%');
 	var thead = $('<thead>').css('background-color', '#BBBBBB').css('cursor', 'pointer').appendTo(table);
-	var appendHeaderField = function(fieldid, fieldlabel){
+	var appendHeaderField = function(fieldid, fieldlabel, adid){
+		var adid_out = ((typeof(adid) === 'undefined') ? fieldid : adid);
 		return $('<td>')
-			.click(function(){setASC_DESC(fieldid); sortTable('tableinfo', fieldid)})
++			.click(function(){setASC_DESC(adid_out); sortTable('tableinfo', fieldid)})
 			.prop('align', 'right')
 			.text(fieldlabel)
 			.appendTo(thead)
@@ -468,9 +470,12 @@ function refreshTableInfo() {
 	appendHeaderField('2', 'Squawk');
 	appendHeaderField('3', 'Altitude');
 	appendHeaderField('4', 'Speed');
-	appendHeaderField('5', 'Track');
-	appendHeaderField('6', 'Msgs');
-	appendHeaderField('7', 'Seen');
+	if (SiteShow && (typeof SiteLat !==  'undefined' || typeof SiteLon !==  'undefined')) {
+		appendHeaderField('5', 'Distance');
+	}
+	appendHeaderField('6', 'Track', '5');
+	appendHeaderField('7', 'Msgs', '6');
+	appendHeaderField('8', 'Seen', '7');
 	var tbody = $('<tbody>').appendTo(table);
 	for (var tablep in Planes) {
 		var tableplane = Planes[tablep]
@@ -535,6 +540,25 @@ function refreshTableInfo() {
 				field_alt.text(tableplane.vAltitude === true ? tableplane.altitude.toString() : (tableplane.vAltitude === '' ? tableplane.altitude : '\u00a0'));
     			field_spd.text(tableplane.vSpeed ? tableplane.speed.toString() : '\u00a0');
     	    }
+
+			// Add distance column to table if site coordinates are provided
+			if (SiteShow && (typeof SiteLat !==  'undefined' || typeof SiteLon !==  'undefined')) {
+				var field = newRField();
+				if (tableplane.vPosition) {
+					var siteLatLon  = new google.maps.LatLng(SiteLat, SiteLon);
+					var planeLatLon = new google.maps.LatLng(tableplane.latitude, tableplane.longitude);
+					var dist = google.maps.geometry.spherical.computeDistanceBetween (siteLatLon, planeLatLon);
+						if (Metric) {
+							dist /= 1000;
+						} else {
+							dist /= 1852;
+						}
+					dist = (Math.round((dist)*10)/10).toFixed(1);
+					field.text(dist);
+				} else {
+					field.text('\u00a0');
+				}
+			}
 			
 			var field = newRField();
 			if (tableplane.vTrack) {
@@ -579,6 +603,8 @@ function sortTable(szTableID,iCol) {
 	if (typeof iCol==='undefined'){
 		if(iSortCol!=-1){
 			var iCol=iSortCol;
+		} else if (SiteShow && (typeof SiteLat !==  'undefined' || typeof SiteLon !==  'undefined')) {
+			var iCol=5;
 		} else {
 			var iCol=iDefaultSortCol;
 		}
