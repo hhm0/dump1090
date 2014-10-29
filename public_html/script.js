@@ -471,13 +471,13 @@ function refreshTableInfo() {
 	appendHeaderField('2', 'Squawk');
 	appendHeaderField('3', 'Altitude');
 	appendHeaderField('4', 'Speed');
-	var tbody = $('<tbody>').appendTo(table);
 	if (SiteShow && (typeof SiteLat !==  'undefined' || typeof SiteLon !==  'undefined')) {
 		appendHeaderField('5', 'Distance');
 	}
 	appendHeaderField('6', 'Track', '5');
 	appendHeaderField('7', 'Msgs', '6');
 	appendHeaderField('8', 'Seen', '7');
+	var tbody = $('<tbody>').appendTo(table);
 	for (var tablep in Planes) {
 		var tableplane = Planes[tablep]
 		if (!tableplane.reapable) {
