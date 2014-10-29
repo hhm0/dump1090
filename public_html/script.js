@@ -454,7 +454,6 @@ function normalizeTrack(track, valid){
 
 // Refeshes the larger table of all the planes
 function refreshTableInfo() {
-<<<<<<< HEAD
 	var table = $('<table>').prop('id', 'tableinfo').prop('width', '100%');
 	var thead = $('<thead>').css('background-color', '#BBBBBB').css('cursor', 'pointer').appendTo(table);
 	var appendHeaderField = function(fieldid, fieldlabel, adid){
