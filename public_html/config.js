@@ -22,6 +22,7 @@ OsmTileUrlFormat	= 'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png';
 // The default marker color
 MarkerColor	  = "rgb(127, 127, 127)";
 SelectedColor = "rgb(225, 225, 225)";
+StaleColor = "rgb(190, 190, 190)";
 
 // -- Site Settings ---------------------------------------
 SiteShow    = false; // true or false
