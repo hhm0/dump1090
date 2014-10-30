@@ -313,9 +313,10 @@ function refreshSelected() {
 	} else if (selected && selected.squawk == 7700) { // General Emergency
 		field.append($('<span>').addClass('squawk7700').text('\u00a0Squawking: General Emergency\u00a0'));
 	} else if (selected && selected.flight != '') {
-		field.append($('<a>').prop('href', 'http://www.flightstats.com/go/FlightStatus/flightStatusByFlight.do?flightNumber=' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FlightStats]'));
-		field.append($('<a>').prop('href', 'http://www.fr24.com/' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FR24]'));
-		field.append($('<a>').prop('href', 'http://www.flightaware.com/live/flight/' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FlightAware]'));
+		var encoded_flighttext = selected.flight.trim();
+		field.append($('<a>').prop('href', 'http://www.flightstats.com/go/FlightStatus/flightStatusByFlight.do?flightNumber=' + encoded_flighttext).prop('target', '_blank').text('[FlightStats]'));
+		field.append($('<a>').prop('href', 'http://www.fr24.com/' + encoded_flighttext).prop('target', '_blank').text('[FR24]'));
+		field.append($('<a>').prop('href', 'http://www.flightaware.com/live/flight/' + encoded_flighttext).prop('target', '_blank').text('[FlightAware]'));
 	}
 	
 	var row = newRow();
