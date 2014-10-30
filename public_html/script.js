@@ -315,6 +315,7 @@ function refreshSelected() {
 	} else if (selected && selected.flight != '') {
 		field.append($('<a>').prop('href', 'http://www.flightstats.com/go/FlightStatus/flightStatusByFlight.do?flightNumber=' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FlightStats]'));
 		field.append($('<a>').prop('href', 'http://www.fr24.com/' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FR24]'));
+		field.append($('<a>').prop('href', 'http://www.flightaware.com/live/flight/' + encodeURIComponent(selected.flight)).prop('target', '_blank').text('[FlightAware]'));
 	}
 	
 	var row = newRow();
