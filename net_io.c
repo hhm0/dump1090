@@ -85,7 +85,7 @@ void modesInitNet(void) {
     for (j = 0; j < MODES_NET_SERVICES_NUM; j++) {
 		services[j].enabled = (services[j].port != 0);
 		if (services[j].enabled) {
-			int s = anetTcpServer(Modes.aneterr, services[j].port, NULL);
+			int s = anetTcpServer(Modes.aneterr, services[j].port, Modes.net_bind_address);
 			if (s == -1) {
 				fprintf(stderr, "Error opening the listening port %d (%s): %s\n",
 					services[j].port, services[j].descr, Modes.aneterr);
@@ -713,6 +713,7 @@ int handleHTTPRequest(struct client *c, char *p) {
     char hdr[512];
     int clen, hdrlen;
     int httpver, keepalive;
+    int statuscode = 500;
     char *url, *content;
     char ctype[48];
     char getFile[1024];
@@ -755,22 +756,35 @@ int handleHTTPRequest(struct client *c, char *p) {
     // "/" -> Our google map application.
     // "/data.json" -> Our ajax request to update planes.
     if (strstr(url, "/data.json")) {
+        statuscode = 200;
         content = aircraftsToJson(&clen);
         //snprintf(ctype, sizeof ctype, MODES_CONTENT_TYPE_JSON);
     } else {
         struct stat sbuf;
         int fd = -1;
+        char *rp, *hrp;
 
-        if (stat(getFile, &sbuf) != -1 && (fd = open(getFile, O_RDONLY)) != -1) {
-            content = (char *) malloc(sbuf.st_size);
-            if (read(fd, content, sbuf.st_size) == -1) {
-                snprintf(content, sbuf.st_size, "Error reading from file: %s", strerror(errno));
+        rp = realpath(getFile, NULL);
+        hrp = realpath(HTMLPATH, NULL);
+        hrp = (hrp ? hrp : HTMLPATH);
+        clen = -1;
+        content = strdup("Server error occured");
+        if (rp && (!strncmp(hrp, rp, strlen(hrp)))) {
+            if (stat(getFile, &sbuf) != -1 && (fd = open(getFile, O_RDONLY)) != -1) {
+                content = (char *) realloc(content, sbuf.st_size);
+                if (read(fd, content, sbuf.st_size) != -1) {
+                    clen = sbuf.st_size;
+                    statuscode = 200;
+                }
             }
-            clen = sbuf.st_size;
         } else {
-            char buf[128];
-            clen = snprintf(buf,sizeof(buf),"Error opening HTML file: %s", strerror(errno));
-            content = strdup(buf);
+            errno = ENOENT;
+        }
+
+        if (clen < 0) {
+            content = realloc(content, 128);
+            clen = snprintf(content, 128,"Error opening HTML file: %s", strerror(errno));
+            statuscode = 404;
         }
         
         if (fd != -1) {
@@ -794,7 +808,7 @@ int handleHTTPRequest(struct client *c, char *p) {
 
     // Create the header and send the reply
     hdrlen = snprintf(hdr, sizeof(hdr),
-        "HTTP/1.1 200 OK\r\n"
+        "HTTP/1.1 %d \r\n"
         "Server: Dump1090\r\n"
         "Content-Type: %s\r\n"
         "Connection: %s\r\n"
@@ -802,6 +816,7 @@ int handleHTTPRequest(struct client *c, char *p) {
         "Cache-Control: no-cache, must-revalidate\r\n"
         "Expires: Sat, 26 Jul 1997 05:00:00 GMT\r\n"
         "\r\n",
+        statuscode,
         ctype,
         keepalive ? "keep-alive" : "close",
         clen);
