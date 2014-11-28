@@ -391,6 +391,8 @@ void snipMode(int level) {
 // ================================ Main ====================================
 //
 void showHelp(void) {
+#define _Q(X) #X
+#define QUOTE(X) _Q(X)
     printf(
 "-----------------------------------------------------------------------------\n"
 "|                        dump1090 ModeS Receiver         Ver : " MODES_DUMP1090_VERSION " |\n"
@@ -401,8 +403,8 @@ void showHelp(void) {
 "--freq <hz>              Set frequency (default: 1090 Mhz)\n"
 "--ifile <filename>       Read data from file (use '-' for stdin)\n"
 "--interactive            Interactive mode refreshing data on screen\n"
-"--interactive-rows <num> Max number of rows in interactive mode (default: 15)\n"
-"--interactive-ttl <sec>  Remove from list if idle for <sec> (default: 60)\n"
+"--interactive-rows <num> Max number of rows in interactive mode (default: " QUOTE(MODES_INTERACTIVE_ROWS) ")\n"
+"--interactive-ttl <sec>  Remove from list if idle for <sec> (default: " QUOTE(MODES_INTERACTIVE_DISPLAY_TTL) ")\n"
 "--interactive-rtl1090    Display flight table in RTL1090 format\n"
 "--raw                    Show only messages hex values\n"
 "--net                    Enable networking\n"
@@ -410,12 +412,12 @@ void showHelp(void) {
 "--net-beast              TCP raw output in Beast binary format\n"
 "--net-only               Enable just networking, no RTL device or file used\n"
 "--net-bind-address <ip>  IP address to bind to (default: Any; Use 127.0.0.1 for private)\n"
-"--net-http-port <port>   HTTP server port (default: 8080)\n"
-"--net-ri-port <port>     TCP raw input listen port  (default: 30001)\n"
-"--net-ro-port <port>     TCP raw output listen port (default: 30002)\n"
-"--net-sbs-port <port>    TCP BaseStation output listen port (default: 30003)\n"
-"--net-bi-port <port>     TCP Beast input listen port  (default: 30004)\n"
-"--net-bo-port <port>     TCP Beast output listen port (default: 30005)\n"
+"--net-http-port <port>   HTTP server port (default: " QUOTE(MODES_NET_HTTP_PORT) ")\n"
+"--net-ri-port <port>     TCP raw input listen port  (default: " QUOTE(MODES_NET_INPUT_RAW_PORT) ")\n"
+"--net-ro-port <port>     TCP raw output listen port (default: " QUOTE(MODES_NET_OUTPUT_RAW_PORT) ")\n"
+"--net-sbs-port <port>    TCP BaseStation output listen port (default: " QUOTE(MODES_NET_OUTPUT_SBS_PORT) ")\n"
+"--net-bi-port <port>     TCP Beast input listen port  (default: " QUOTE(MODES_NET_INPUT_BEAST_PORT) ")\n"
+"--net-bo-port <port>     TCP Beast output listen port (default: " QUOTE(MODES_NET_OUTPUT_BEAST_PORT) ")\n"
 "--net-ro-size <size>     TCP raw output minimum size (default: 0)\n"
 "--net-ro-rate <rate>     TCP raw output memory flush rate (default: 0)\n"
 "--net-heartbeat <rate>   TCP heartbeat rate in seconds (default: 60 sec; 0 to disable)\n"
@@ -435,7 +437,7 @@ void showHelp(void) {
 "--snip <level>           Strip IQ file removing samples < level\n"
 "--debug <flags>          Debug mode (verbose), see README for details\n"
 "--quiet                  Disable output to stdout. Use for daemon applications\n"
-"--ppm <error>            Set receiver error in parts per million (default 0)\n"
+"--ppm <error>            Set receiver error in parts per million (default " QUOTE(MODES_DEFAULT_PPM) ")\n"
 "--help                   Show this help\n"
 "\n"
 "Debug mode flags: d = Log frames decoded with errors\n"
