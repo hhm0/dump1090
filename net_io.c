@@ -491,9 +491,6 @@ void modesSendSBSOutput(struct modesMessage *mm) {
 // Write MJS output to TCP clients
 //
 void modesSendMJSOutput(struct modesMessage *mm) {
-	//OOO
-//#define printy(bufmpt, buflen, fmt, params...) length=snprintf null(measure length; va_params); bufaptr = realloc buflen + length, bufmptr; sprintf bufaddr - 1 (cuz of null termin; va_params); *buflen += length
-	// TODO: buffer overflow, escape newlines/nulls/etc., _vscnprintf_s_etc_alach
 	int i;
     char buf[65536] = "", *p = buf;
 #define MJS_PRNT(...) p += snprintf(p, sizeof(buf) - (p - buf), __VA_ARGS__)
