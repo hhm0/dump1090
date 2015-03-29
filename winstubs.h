@@ -76,6 +76,8 @@ _inline int inet_aton(const char * cp, DWORD * ulAddr) { *ulAddr = inet_addr(cp)
 #define snprintf  _snprintf
 #define vsnprintf _vsnprintf
 #define realpath(N,R) _fullpath((R),(N),_MAX_PATH)
+// from http://www.enchantedage.com/node/231
+#define strtoll _strtoi64
 
 _inline void cls() {
     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
