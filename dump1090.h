@@ -143,6 +143,9 @@
 #define MODES_ACFLAGS_FS_VALID       (1<<13) // Aircraft Flight Status is known
 #define MODES_ACFLAGS_NSEWSPD_VALID  (1<<14) // Aircraft EW and NS Speed is known
 #define MODES_ACFLAGS_LATLON_REL_OK  (1<<15) // Indicates it's OK to do a relative CPR
+#define MODES_ACFLAGS_ACCAT_VALID    (1<<16) // Aircraft Category is known
+#define MODES_ACFLAGS_SSTATUS_VALID  (1<<17) // Aircraft Surveillance Status is known
+#define MODES_ACFLAGS_BHDIFF_VALID   (1<<18) // Geometric height diff. from baro alt known
 
 #define MODES_ACFLAGS_LLEITHER_VALID (MODES_ACFLAGS_LLEVEN_VALID | MODES_ACFLAGS_LLODD_VALID)
 #define MODES_ACFLAGS_LLBOTH_VALID   (MODES_ACFLAGS_LLEVEN_VALID | MODES_ACFLAGS_LLODD_VALID)
@@ -409,6 +412,10 @@ struct modesMessage {
     int    ns_velocity;         // N/S velocity.
     int    vert_rate;           // Vertical rate.
     int    velocity;            // Reported by aircraft, or computed from from EW and NS velocity
+	int    is_baro;             // Whether altitude is barometric altitude.
+	int    sstatus;             // Surveillance Status field value.
+	char   accat[3];            // Aircraft category.
+	int    bh_diff;				// Geometric height difference from baro altitude
 
     // DF4, DF5, DF20, DF21
     int  fs;                    // Flight status for DF4,5,20,21
