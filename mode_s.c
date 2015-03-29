@@ -1455,7 +1455,7 @@ void displayModesMessage(struct modesMessage *mm) {
 						printf("    Airspeed           : %d\n", mm->velocity);
 					}
 					printf("    Vertical status    : %s\n", (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) ? "Valid" : "Unavailable");
-					printf("    Vertical rate src  : %s\n", (((mm->msg[8] >> 4) & 1) ? "Baro" : "GNSS"));
+					printf("    Vertical rate src  : %s\n", (((mm->msg[8] >> 4) & 1) ? "Baro" : "Geo"));
 					printf("    Vertical rate      : %d\n", mm->vert_rate);
 					if (mm->bFlags |= MODES_ACFLAGS_BHDIFF_VALID) {
 						printf("    Geo-baro difference: %d feet\n", mm->bh_diff);
