@@ -1438,7 +1438,7 @@ void displayModesMessage(struct modesMessage *mm) {
 			} else if (mm->metype == 19) { // Airborne Velocity
 				if ((mm->mesub >= 1) && (mm->mesub <= 4)) {
 					printf("    Intent Change      : %s\n", ((mm->msg[5] & 0x80) ? "Yes" : "No"));
-					printf("    NACv               : %s\n", nacv_str[((mm->msg[5] >> 3) & 7)]);
+					printf("    NACv               : %s\n", nacv_str[((mm->msg[5] & 0x38) >> 3)]);
 					if (mm->mesub == 1 || mm->mesub == 2) {
 						printf("    Supersonic         : %s\n", (mm->mesub == 2)  ? "Yes" : "No");
 						printf("    EW status          : %s\n", (mm->bFlags & MODES_ACFLAGS_EWSPEED_VALID)  ? "Valid" : "Unavailable");
@@ -1455,7 +1455,7 @@ void displayModesMessage(struct modesMessage *mm) {
 						printf("    Airspeed           : %d\n", mm->velocity);
 					}
 					printf("    Vertical status    : %s\n", (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) ? "Valid" : "Unavailable");
-					printf("    Vertical rate src  : %s\n", (((mm->msg[8] >> 4) & 1) ? "Baro" : "Geo"));
+					printf("    Vertical rate src  : %s\n", ((mm->msg[8] & 0x10) ? "Baro" : "Geo"));
 					printf("    Vertical rate      : %d\n", mm->vert_rate);
 					if (mm->bFlags |= MODES_ACFLAGS_BHDIFF_VALID) {
 						printf("    Geo-baro difference: %d feet\n", mm->bh_diff);

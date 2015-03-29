@@ -585,7 +585,7 @@ void modesSendMJSOutput(struct modesMessage *mm) {
 					}
 				}
 				if (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) {
-					MJS_PRNT(",\"vert_speed_type\":\"%s\"", (((mm->msg[8] >> 4) & 1) ? "baro" : "geo"));
+					MJS_PRNT(",\"vert_speed_type\":\"%s\"", ((mm->msg[8] & 0x10) ? "baro" : "geo"));
 				}
 			}
 		}
