@@ -697,6 +697,7 @@ int decodeHexMessage(struct client *c, char *hex) {
     struct modesMessage mm;
     MODES_NOTUSED(c);
     memset(&mm, 0, sizeof(mm));
+	char ts[13];
 
     // Mark messages received over the internet as remote so that we don't try to
     // pass them off as being received by this instance when forwarding them
@@ -717,19 +718,24 @@ int decodeHexMessage(struct client *c, char *hex) {
     if (hex[l-1] != ';') {return (0);} // not complete - abort
 
     switch(hex[0]) {
-        case '<': {
-            mm.signalLevel = (hexDigitVal(hex[13])<<4) | hexDigitVal(hex[14]);
-            hex += 15; l -= 16; // Skip <, timestamp and siglevel, and ;
-            break;}
-
+        case '<':
         case '@':     // No CRC check
         case '%': {   // CRC is OK
-            hex += 13; l -= 14; // Skip @,%, and timestamp, and ;
+			memcpy(&ts, hex + 1, 12); ts[12] = '\0';
+			mm.timestampMsg = strtoll(ts, 0, 16);
+			if (hex[0] == '<') {
+				mm.signalLevel = (hexDigitVal(hex[13])<<4) | hexDigitVal(hex[14]);
+				hex += 15; l -= 16; // Skip <, timestamp and siglevel, and ;
+			} else {
+				hex += 13; l -= 14; // Skip @,%, and timestamp, and ;
+			}
             break;}
 
         case '*':
+        case '+':	// CRC ok (see http://rxcontrol.free.fr/PicADSB/)
+        case '-':   // CRC not ok (see http://rxcontrol.free.fr/PicADSB/)
         case ':': {
-            hex++; l-=2; // Skip * and ;
+            hex++; l-=2; // Skip */+/- and ;
             break;}
 
         default: {
