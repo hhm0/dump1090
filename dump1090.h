@@ -143,6 +143,9 @@
 #define MODES_ACFLAGS_FS_VALID       (1<<13) // Aircraft Flight Status is known
 #define MODES_ACFLAGS_NSEWSPD_VALID  (1<<14) // Aircraft EW and NS Speed is known
 #define MODES_ACFLAGS_LATLON_REL_OK  (1<<15) // Indicates it's OK to do a relative CPR
+#define MODES_ACFLAGS_ACCAT_VALID    (1<<16) // Aircraft Category is known
+#define MODES_ACFLAGS_SSTATUS_VALID  (1<<17) // Aircraft Surveillance Status is known
+#define MODES_ACFLAGS_BHDIFF_VALID   (1<<18) // Geometric height diff. from baro alt known
 
 #define MODES_ACFLAGS_LLEITHER_VALID (MODES_ACFLAGS_LLEVEN_VALID | MODES_ACFLAGS_LLODD_VALID)
 #define MODES_ACFLAGS_LLBOTH_VALID   (MODES_ACFLAGS_LLEVEN_VALID | MODES_ACFLAGS_LLODD_VALID)
@@ -167,13 +170,14 @@
 
 #define MODES_NET_HEARTBEAT_RATE       900      // Each block is approx 65mS - default is > 1 min
 
-#define MODES_NET_SERVICES_NUM          6
+#define MODES_NET_SERVICES_NUM          7
 #define MODES_NET_INPUT_RAW_PORT    30001
 #define MODES_NET_OUTPUT_RAW_PORT   30002
 #define MODES_NET_OUTPUT_SBS_PORT   30003
 #define MODES_NET_INPUT_BEAST_PORT  30004
 #define MODES_NET_OUTPUT_BEAST_PORT 30005
 #define MODES_NET_HTTP_PORT          8080
+#define MODES_NET_OUTPUT_MJS_PORT       0
 #define MODES_CLIENT_BUF_SIZE  1024
 #define MODES_NET_SNDBUF_SIZE (1024*64)
 #define MODES_NET_SNDBUF_MAX  (7)
@@ -275,6 +279,7 @@ struct {                             // Internal state
     int            ris;              // Raw input listening socket
     int            bos;              // Beast output listening socket
     int            bis;              // Beast input listening socket
+    int            mjs;              // JSON message output listening socket
     int            https;            // HTTP listening socket
     char          *rawOut;           // Buffer for building raw output data
     int            rawOutUsed;       // How much of the buffer is currently used
@@ -298,6 +303,7 @@ struct {                             // Internal state
     int   net_heartbeat_count;       // TCP heartbeat counter
     int   net_heartbeat_rate;        // TCP heartbeat rate
     int   net_output_sbs_port;       // SBS output TCP port
+    int   net_output_mjs_port;       // MJS output TCP port
     int   net_output_raw_size;       // Minimum Size of the output raw data
     int   net_output_raw_rate;       // Rate (in 64mS increments) of output raw data
     int   net_output_raw_rate_count; // Rate (in 64mS increments) of output raw data
@@ -351,6 +357,7 @@ struct {                             // Internal state
     unsigned int stat_http_requests;
     unsigned int stat_sbs_connections;
     unsigned int stat_raw_connections;
+    unsigned int stat_mjs_connections;
     unsigned int stat_beast_connections;
     unsigned int stat_out_of_phase;
     unsigned int stat_ph_demodulated0;
@@ -405,6 +412,10 @@ struct modesMessage {
     int    ns_velocity;         // N/S velocity.
     int    vert_rate;           // Vertical rate.
     int    velocity;            // Reported by aircraft, or computed from from EW and NS velocity
+	int    is_baro;             // Whether altitude is barometric altitude.
+	int    sstatus;             // Surveillance Status field value.
+	char   accat[3];            // Aircraft category.
+	int    bh_diff;				// Geometric height difference from baro altitude
 
     // DF4, DF5, DF20, DF21
     int  fs;                    // Flight status for DF4,5,20,21

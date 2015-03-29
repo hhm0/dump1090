@@ -28,6 +28,8 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+#include <inttypes.h>
+
 #include "dump1090.h"
 //
 // ============================= Networking =============================
@@ -64,7 +66,8 @@ void modesInitNet(void) {
 		{"Beast TCP output", &Modes.bos, Modes.net_output_beast_port, 1},
 		{"Beast TCP input", &Modes.bis, Modes.net_input_beast_port, 1},
 		{"HTTP server", &Modes.https, Modes.net_http_port, 1},
-		{"Basestation TCP output", &Modes.sbsos, Modes.net_output_sbs_port, 1}
+		{"Basestation TCP output", &Modes.sbsos, Modes.net_output_sbs_port, 1},
+		{"JSON Message TCP output", &Modes.mjs, Modes.net_output_mjs_port, 1}
 	};
 
 	memcpy(&services, &svc, sizeof(svc));//services = svc;
@@ -130,6 +133,7 @@ struct client * modesAcceptClients(void) {
 			if (*services[j].socket == Modes.sbsos) Modes.stat_sbs_connections++;
 			if (*services[j].socket == Modes.ros)   Modes.stat_raw_connections++;
 			if (*services[j].socket == Modes.bos)   Modes.stat_beast_connections++;
+			if (*services[j].socket == Modes.mjs)   Modes.stat_mjs_connections++;
 
 			j--; // Try again with the same listening port
 
@@ -174,6 +178,8 @@ void modesCloseClient(struct client *c) {
         if (Modes.stat_sbs_connections) Modes.stat_sbs_connections--;
     } else if (c->service == Modes.ros) {
         if (Modes.stat_raw_connections) Modes.stat_raw_connections--;
+    } else if (c->service == Modes.mjs) {
+        if (Modes.stat_mjs_connections) Modes.stat_mjs_connections--;
     } else if (c->service == Modes.bos) {
         if (Modes.stat_beast_connections) Modes.stat_beast_connections--;
     }
@@ -421,12 +427,24 @@ void modesSendSBSOutput(struct modesMessage *mm) {
         } else {
             p += sprintf(p, ",0");
         }
+	} else if (mm->bFlags & MODES_ACFLAGS_SSTATUS_VALID) {
+		if (mm->sstatus == 2) {
+            p += sprintf(p, ",-1");
+        } else {
+            p += sprintf(p, ",0");
+        }
     } else {
         p += sprintf(p, ",");
     }
 
     // Field 20 is the Squawk Emergency flag (if we have it)
-    if (mm->bFlags & MODES_ACFLAGS_SQUAWK_VALID) {
+	if (mm->bFlags & MODES_ACFLAGS_SSTATUS_VALID) {
+		if (mm->sstatus == 1) {
+            p += sprintf(p, ",-1");
+        } else {
+            p += sprintf(p, ",0");
+        }
+	} else if (mm->bFlags & MODES_ACFLAGS_SQUAWK_VALID) {
         if ((mm->modeA == 0x7500) || (mm->modeA == 0x7600) || (mm->modeA == 0x7700)) {
             p += sprintf(p, ",-1");
         } else {
@@ -439,6 +457,12 @@ void modesSendSBSOutput(struct modesMessage *mm) {
     // Field 21 is the Squawk Ident flag (if we have it)
     if (mm->bFlags & MODES_ACFLAGS_FS_VALID) {
         if ((mm->fs >= 4) && (mm->fs <= 5)) {
+            p += sprintf(p, ",-1");
+        } else {
+            p += sprintf(p, ",0");
+        }
+	} else if (mm->bFlags & MODES_ACFLAGS_SSTATUS_VALID) {
+		if (mm->sstatus == 3) {
             p += sprintf(p, ",-1");
         } else {
             p += sprintf(p, ",0");
@@ -464,10 +488,122 @@ void modesSendSBSOutput(struct modesMessage *mm) {
 //
 //=========================================================================
 //
+// Write MJS output to TCP clients
+//
+void modesSendMJSOutput(struct modesMessage *mm) {
+	//OOO
+//#define printy(bufmpt, buflen, fmt, params...) length=snprintf null(measure length; va_params); bufaptr = realloc buflen + length, bufmptr; sprintf bufaddr - 1 (cuz of null termin; va_params); *buflen += length
+	// TODO: buffer overflow, escape newlines/nulls/etc., _vscnprintf_s_etc_alach
+	int i;
+    char buf[65536] = "", *p = buf;
+#define MJS_PRNT(...) p += snprintf(p, sizeof(buf) - (p - buf), __VA_ARGS__)
+	MJS_PRNT("{");
+	MJS_PRNT("\"message\":\"");
+    for (i = 0; i < mm->msgbits/8; i++) MJS_PRNT("%02x", mm->msg[i]);
+	MJS_PRNT("\"");
+	if (mm->signalLevel != 0xFF) {
+		MJS_PRNT(",\"signal_strength\":%0d", (unsigned int)mm->signalLevel);
+	}
+	if (mm->msgtype == 32) {
+		MJS_PRNT(",\"df\":null");
+	} else {
+		MJS_PRNT(",\"mode_s_addr\":\"%06x\"", mm->addr);
+		MJS_PRNT(",\"df\":%0d", mm->msgtype);
+	}
+	if ((mm->msgtype == 11) || (mm->msgtype == 17)) {
+		MJS_PRNT(",\"%s\":%d", ((mm->msgtype == 18) ? "cf" : ((mm->msgtype == 19) ? "af" : "ca")), mm->ca);
+	}
+	if (Modes.mlat && mm->timestampMsg) {
+		MJS_PRNT(",\"mlat\":\"%" PRIu64 "\"", mm->timestampMsg);
+	}
+
+    if (mm->bFlags & MODES_ACFLAGS_CALLSIGN_VALID) {
+		MJS_PRNT(",\"call_sign\":\"%s\"", mm->flight);
+	}
+    if ((mm->bFlags & MODES_ACFLAGS_AOG_GROUND) == MODES_ACFLAGS_AOG_GROUND) {
+        MJS_PRNT(",\"altitude\":0");
+    } else if (mm->bFlags & MODES_ACFLAGS_ALTITUDE_VALID) {
+        MJS_PRNT(",\"altitude\":%0d", mm->altitude);
+    }
+    if (mm->bFlags & MODES_ACFLAGS_AOG_VALID) {
+        MJS_PRNT(",\"is_on_ground\":%s", ((mm->bFlags & MODES_ACFLAGS_AOG) ? "true" : "false"));
+	}
+    if (mm->bFlags & MODES_ACFLAGS_SPEED_VALID) {
+        MJS_PRNT(",\"speed\":%d", mm->velocity);
+    }
+    if (mm->bFlags & MODES_ACFLAGS_HEADING_VALID) {
+        MJS_PRNT(",\"track\":%d", mm->heading);
+    }
+	if (mm->bFlags & MODES_ACFLAGS_LLEITHER_VALID) {
+		MJS_PRNT(",\"cpr_coord\":{\"f\":\"%s\",\"latitude\":%d,\"longitude\":%d}", ((mm->bFlags & MODES_ACFLAGS_LLODD_VALID) ? "odd" : "even"), mm->raw_latitude, mm->raw_longitude);
+	}
+	if (mm->bFlags & MODES_ACFLAGS_LATLON_VALID) {
+		MJS_PRNT(",\"latitude\":\"%f\"", mm->fLat);
+		MJS_PRNT(",\"longitude\":\"%f\"", mm->fLon);
+	}
+    if (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) {
+		MJS_PRNT(",\"vert_speed\":%d", mm->vert_rate);
+	}
+    if (mm->bFlags & MODES_ACFLAGS_SQUAWK_VALID) {
+		MJS_PRNT(",\"squawk\":\"%04x\"", mm->modeA);
+	}
+    if (mm->bFlags & MODES_ACFLAGS_ACCAT_VALID) {
+		MJS_PRNT(",\"aircraft_category\":\"%s\"", mm->accat);
+	}
+	if (mm->msgtype == 11) {
+		if (mm->iid > 16) {
+			MJS_PRNT(",\"iid\":\"SI-%02d\"", mm->iid-16);
+		} else {
+			MJS_PRNT(",\"iid\":\"II-%02d\"", mm->iid);
+		}
+	}
+	if (mm->msgtype < 32) {
+		// TODO: use mm->correctedbits too
+		MJS_PRNT(",\"crcok\":%s", (mm->crcok ? "true" : "false"));
+	}
+	if (mm->bFlags & MODES_ACFLAGS_NSEWSPD_VALID) {
+		if (mm->bFlags & MODES_ACFLAGS_NSSPEED_VALID) {
+			MJS_PRNT(",\"ns_speed\":%d", mm->ns_velocity);
+		}
+		if (mm->bFlags & MODES_ACFLAGS_EWSPEED_VALID) {
+			MJS_PRNT(",\"ew_speed\":%d", mm->ew_velocity);
+		}
+	}
+	if (mm->bFlags & MODES_ACFLAGS_BHDIFF_VALID) {
+		MJS_PRNT(",\"bh_diff\":%d", mm->bh_diff);
+	}
+	if ((mm->msgtype == 17) || ((mm->msgtype == 18) && ((mm->ca == 0) || (mm->ca == 1) || (mm->ca == 6)) ) || ((mm->msgtype == 19) && (mm->ca == 0)) ) {
+		MJS_PRNT(",\"metype\":%d,\"mesub\":%d", mm->metype, mm->mesub);
+		if ( (mm->metype != 19) && ((mm->metype >= 9) && (mm->metype <= 22)) ) {
+			MJS_PRNT(",\"altitude_type\":\"%s\"", (mm->is_baro ? "baro" : "gnss"));
+		}
+		if (mm->metype == 19) {
+			if ((mm->mesub >= 1) && (mm->mesub <= 4)) {
+				MJS_PRNT(",\"nac_v\":%d", ((mm->msg[5] >> 3) & 7));
+				if (mm->bFlags & MODES_ACFLAGS_SPEED_VALID) {
+					if ((mm->mesub == 1) || (mm->mesub == 2)) {
+						MJS_PRNT(",\"speed_type\":\"gs\"");
+					} else {
+						MJS_PRNT(",\"speed_type\":\"%s\"", ((mm->msg[7] & 0x80) ? "tas" : "ias"));
+					}
+				}
+				if (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) {
+					MJS_PRNT(",\"vert_speed_type\":\"%s\"", (((mm->msg[8] >> 4) & 1) ? "baro" : "gnss"));
+				}
+			}
+		}
+	}
+	MJS_PRNT("}\n");
+    modesSendAllClients(Modes.mjs, buf, ((p - buf) > (unsigned int)sizeof(buf) ? (unsigned int)sizeof(buf): p - buf));
+}
+//
+//=========================================================================
+//
 void modesQueueOutput(struct modesMessage *mm) {
     if (Modes.stat_sbs_connections)   {modesSendSBSOutput(mm);}
     if (Modes.stat_beast_connections) {modesSendBeastOutput(mm);}
     if (Modes.stat_raw_connections)   {modesSendRawOutput(mm);}
+    if (Modes.stat_mjs_connections)   {modesSendMJSOutput(mm);}
 }
 //
 //=========================================================================
