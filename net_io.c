@@ -396,14 +396,14 @@ void modesSendSBSOutput(struct modesMessage *mm) {
 
     // Field 13 is the ground Speed (if we have it)
     if (mm->bFlags & MODES_ACFLAGS_SPEED_VALID) {
-        p += sprintf(p, ",%d", mm->velocity);
+        p += sprintf(p, ",%.1f", mm->velocity);
     } else {
         p += sprintf(p, ","); 
     }
 
     // Field 14 is the ground Heading (if we have it)       
     if (mm->bFlags & MODES_ACFLAGS_HEADING_VALID) {
-        p += sprintf(p, ",%d", mm->heading);
+        p += sprintf(p, ",%.1f", mm->heading);
     } else {
         p += sprintf(p, ",");
     }
@@ -526,10 +526,10 @@ void modesSendMJSOutput(struct modesMessage *mm) {
         MJS_PRNT(",\"is_on_ground\":%s", ((mm->bFlags & MODES_ACFLAGS_AOG) ? "true" : "false"));
 	}
     if (mm->bFlags & MODES_ACFLAGS_SPEED_VALID) {
-        MJS_PRNT(",\"speed\":%d", mm->velocity);
+        MJS_PRNT(",\"speed\":%.1f", mm->velocity);
     }
     if (mm->bFlags & MODES_ACFLAGS_HEADING_VALID) {
-        MJS_PRNT(",\"track\":%d", mm->heading);
+        MJS_PRNT(",\"track\":%.1f", mm->heading);
     }
 	if (mm->bFlags & MODES_ACFLAGS_LLEITHER_VALID) {
 		MJS_PRNT(",\"cpr_coord\":{\"f\":\"%s\",\"latitude\":%d,\"longitude\":%d}", ((mm->bFlags & MODES_ACFLAGS_LLODD_VALID) ? "odd" : "even"), mm->raw_latitude, mm->raw_longitude);
@@ -814,8 +814,8 @@ char *aircraftsToJson(int *len) {
         // No metric conversion
         l = snprintf(p,buflen,
             "{\"hex\":\"%06x\", \"squawk\":\"%04x\", \"flight\":\"%s\", \"lat\":%f, "
-            "\"lon\":%f, \"validposition\":%d, \"altitude\":%d, \"validaltitude\":%d, \"vert_rate\":%d,\"track\":%d, \"validtrack\":%d,"
-            "\"speed\":%d, \"validspeed\":%d, \"messages\":%ld, \"seen\":%d},\n",
+            "\"lon\":%f, \"validposition\":%d, \"altitude\":%d, \"validaltitude\":%d, \"vert_rate\":%d,\"track\":%.1f, \"validtrack\":%d,"
+            "\"speed\":%.1f, \"validspeed\":%d, \"messages\":%ld, \"seen\":%d},\n",
             a->addr, a->modeA, a->flight, a->lat, a->lon, position, a->altitude, altitude, a->vert_rate, a->track, track,
             a->speed, speed, a->messages, (int)(now - a->seen));
         p += l; buflen -= l;

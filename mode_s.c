@@ -1118,10 +1118,10 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
                 if (ew_raw && ns_raw) {
                     // Compute velocity and angle from the two speed components
                     mm->bFlags |= (MODES_ACFLAGS_SPEED_VALID | MODES_ACFLAGS_HEADING_VALID | MODES_ACFLAGS_NSEWSPD_VALID);
-                    mm->velocity = (int) sqrt((ns_vel * ns_vel) + (ew_vel * ew_vel));
+                    mm->velocity = sqrt((ns_vel * ns_vel) + (ew_vel * ew_vel));
 
                     if (mm->velocity) {
-                        mm->heading = (int) (atan2(ew_vel, ns_vel) * 180.0 / M_PI);
+                        mm->heading = (atan2(ew_vel, ns_vel) * 180.0 / M_PI);
                         // We don't want negative values but a 0-360 scale
                         if (mm->heading < 0) mm->heading += 360;
                     }
@@ -1132,8 +1132,8 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
 
                 if (msg[5] & 0x04) {
                     mm->bFlags |= MODES_ACFLAGS_HEADING_VALID;
-                    mm->heading = ((((msg[5] & 0x03) << 8) | msg[6]) * 45) >> 7;
-                    //mm->heading = ((((msg[5] & 0x03) << 8) | msg[6]) * 180) * pow(2, -9);
+                    //mm->heading = ((((msg[5] & 0x03) << 8) | msg[6]) * 45) >> 7;
+                    mm->heading = ((((msg[5] & 0x03) << 8) | msg[6]) * 180) * pow(2, -9);
                 }
             }
 
@@ -1166,7 +1166,8 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
 
 					if (msg[5] & 0x08) {
 						mm->bFlags |= MODES_ACFLAGS_HEADING_VALID;
-						mm->heading = ((((msg[5] << 4) | (msg[6] >> 4)) & 0x007F) * 45) >> 4;
+						//mm->heading = ((((msg[5] << 4) | (msg[6] >> 4)) & 0x007F) * 45) >> 4;
+						mm->heading = ((((msg[5] << 4) | (msg[6] >> 4)) & 0x007F) * 180) * pow(2, -6);
 					}
 				}
 			}
@@ -1446,10 +1447,10 @@ void displayModesMessage(struct modesMessage *mm) {
 					} else if (mm->mesub == 3 || mm->mesub == 4) {
 						printf("    Supersonic         : %s\n", (mm->mesub == 4)  ? "Yes" : "No");
 						printf("    Heading status     : %s\n", (mm->bFlags & MODES_ACFLAGS_HEADING_VALID)  ? "Valid" : "Unavailable");
-						printf("    Heading            : %d\n", mm->heading);
+						printf("    Heading            : %.1f\n", mm->heading);
 						printf("    Airspeed type      : %s\n", ((mm->msg[7] & 0x80) ? "True Airspeed (TAS)" : "Indicated Airspeed (IAS)"));
 						printf("    Airspeed status    : %s\n", (mm->bFlags & MODES_ACFLAGS_SPEED_VALID)    ? "Valid" : "Unavailable");
-						printf("    Airspeed           : %d\n", mm->velocity);
+						printf("    Airspeed           : %.1f\n", mm->velocity);
 					}
 					printf("    Vertical status    : %s\n", (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) ? "Valid" : "Unavailable");
 					printf("    Vertical rate src  : %s\n", ((mm->msg[8] & 0x10) ? "Baro" : "Geo"));
