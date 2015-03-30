@@ -458,26 +458,28 @@ function normalizeTrack(track, valid){
 function refreshTableInfo() {
 	var table = $('<table>').prop('id', 'tableinfo').prop('width', '100%');
 	var thead = $('<thead>').css('background-color', '#BBBBBB').css('cursor', 'pointer').appendTo(table);
-	var appendHeaderField = function(fieldid, fieldlabel, adid){
-		var adid_out = ((typeof(adid) === 'undefined') ? fieldid : adid);
+	var adid = 0;
+	var appendHeaderField = function(fieldlabel){
+		var adid_out = adid.toString();
+		adid += 1;
 		return $('<td>')
-			.click(function(){setASC_DESC(adid_out); sortTable('tableinfo', fieldid)})
+			.click(function(){setASC_DESC(adid_out); sortTable('tableinfo', adid_out)})
 			.prop('align', 'right')
 			.text(fieldlabel)
 			.appendTo(thead)
 			;
 	};
-	appendHeaderField('0', 'ICAO');
-	appendHeaderField('1', 'Flight');
-	appendHeaderField('2', 'Squawk');
-	appendHeaderField('3', 'Altitude');
-	appendHeaderField('4', 'Speed');
+	appendHeaderField('ICAO');
+	appendHeaderField('Flight');
+	appendHeaderField('Squawk');
+	appendHeaderField('Altitude');
+	appendHeaderField('Speed');
 	if (SiteShow && (typeof SiteLat !==  'undefined' || typeof SiteLon !==  'undefined')) {
-		appendHeaderField('5', 'Distance');
+		appendHeaderField('Distance');
 	}
-	appendHeaderField('6', 'Track', '5');
-	appendHeaderField('7', 'Msgs', '6');
-	appendHeaderField('8', 'Seen', '7');
+	appendHeaderField('Track');
+	appendHeaderField('Msgs');
+	appendHeaderField('Seen');
 	var tbody = $('<tbody>').appendTo(table);
 	for (var tablep in Planes) {
 		var tableplane = Planes[tablep]
