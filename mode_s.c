@@ -744,6 +744,24 @@ int decodeMovementField(int movement) {
 //
 //=========================================================================
 //
+// Decode sign-with-multiplier field style
+//
+int decodeSignMultField(int data_in, int sign, int mult, int *flags, int flagbits) {
+	if (data_in) {
+		int data_out = data_in;
+		--data_out;
+		if (sign)
+		  {data_out = 0 - data_out;}
+		data_out = data_out * mult;
+		*flags |= flagbits;
+		return data_out;
+	} else {
+		return 0;
+	}
+}
+//
+//=========================================================================
+//
 // Capability table
 char *ca_str[8] = {
     /* 0 */ "Level 1 (Surveillance Only)",
@@ -1068,22 +1086,8 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
             mm->bFlags |= MODES_ACFLAGS_AOG_VALID; 
 
             if ( (mesub >= 1) && (mesub <= 4) ) {
-                int vert_rate = ((msg[8] & 0x07) << 6) | (msg[9] >> 2);
-				int bh_diff = (msg[10] & 0x7F);
-                if (vert_rate) {
-                    --vert_rate;
-                    if (msg[8] & 0x08) 
-                      {vert_rate = 0 - vert_rate;}
-                    mm->vert_rate =  vert_rate * 64;
-                    mm->bFlags   |= MODES_ACFLAGS_VERTRATE_VALID;
-                }
-				if (bh_diff) {
-					--bh_diff;
-					if (msg[10] & 0x80)
-					  {bh_diff = 0 - bh_diff;}
-					mm->bh_diff = bh_diff * 25;
-					mm->bFlags |= MODES_ACFLAGS_BHDIFF_VALID;
-				}
+				mm->vert_rate = decodeSignMultField((((msg[8] & 0x07) << 6) | (msg[9] >> 2)), (msg[8] & 0x08), 64, &mm->bFlags, MODES_ACFLAGS_VERTRATE_VALID);
+				mm->bh_diff = decodeSignMultField((msg[10] & 0x7F), (msg[10] & 0x80), 25, &mm->bFlags, MODES_ACFLAGS_BHDIFF_VALID);
             }
 
             if ((mesub == 1) || (mesub == 2)) {
@@ -1124,14 +1128,7 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
                 }
 
             } else if (mesub == 3 || mesub == 4) {
-                int airspeed = ((msg[7] & 0x7f) << 3) | (msg[8] >> 5);
-                if (airspeed) {
-                    mm->bFlags |= MODES_ACFLAGS_SPEED_VALID;
-                    --airspeed;
-                    if (mesub == 4)  // If (supersonic) unit is 4 kts
-                        {airspeed = airspeed << 2;}
-                    mm->velocity =  airspeed;
-                }
+				mm->velocity = decodeSignMultField(((msg[7] & 0x7f) << 3), 0, ((mesub == 4) ? 4 : 1), &mm->bFlags, MODES_ACFLAGS_SPEED_VALID);
 
                 if (msg[5] & 0x04) {
                     mm->bFlags |= MODES_ACFLAGS_HEADING_VALID;
