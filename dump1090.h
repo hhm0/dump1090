@@ -205,8 +205,8 @@ struct aircraft {
     char          flight[16];     // Flight number
     unsigned char signalLevel[8]; // Last 8 Signal Amplitudes
     int           altitude;       // Altitude
-    int           speed;          // Velocity
-    int           track;          // Angle of flight
+    float         speed;          // Velocity
+    float         track;          // Angle of flight
     int           vert_rate;      // Vertical rate.
     time_t        seen;           // Time at which the last packet was received
     time_t        seenLatLon;     // Time at which the last lat long was calculated
@@ -402,7 +402,7 @@ struct modesMessage {
     // DF 17, DF 18
     int    metype;              // Extended squitter message type.
     int    mesub;               // Extended squitter message subtype.
-    int    heading;             // Reported by aircraft, or computed from from EW and NS velocity
+    float  heading;             // Reported by aircraft, or computed from from EW and NS velocity
     int    raw_latitude;        // Non decoded latitude.
     int    raw_longitude;       // Non decoded longitude.
     double fLat;                // Coordinates obtained from CPR encoded data if/when decoded
@@ -411,7 +411,7 @@ struct modesMessage {
     int    ew_velocity;         // E/W velocity.
     int    ns_velocity;         // N/S velocity.
     int    vert_rate;           // Vertical rate.
-    int    velocity;            // Reported by aircraft, or computed from from EW and NS velocity
+    float  velocity;            // Reported by aircraft, or computed from from EW and NS velocity
 	int    is_baro;             // Whether altitude is barometric altitude.
 	int    sstatus;             // Surveillance Status field value.
 	char   accat[3];            // Aircraft category.
