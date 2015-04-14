@@ -1315,6 +1315,7 @@ void displayModesMessage(struct modesMessage *mm) {
             } else if ( mm->msg[4]       == 0x10) { // BDS 1,0 Datalink Capability report
 				int i;
                 printf("    BDS 1,0 Datalink Capability report\n");
+				// from https://www.ll.mit.edu/mission/aviation/publications/publication-files/atc-reports/Grappel_2007_ATC-334_WW-15318.pdf
 				printf("      Continuation                       : %s\n", (mm->msg[5] & 0x80) ? "Yes" : "No");
 				printf("      Mode S Subnetwork Version          : %d\n", mm->msg[6] >> 1);
 				printf("      Enhanced Protocol Indicator        : %s\n", (mm->msg[6] & 1) ? "Level 5" : "Level 2 to 4");
