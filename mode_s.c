@@ -1291,22 +1291,44 @@ void displayModesMessage(struct modesMessage *mm) {
             (mm->unit == MODES_UNIT_METERS) ? "meters" : "feet");
         printf("  ICAO Address   : %06x\n", mm->addr);
 
-    } else if (mm->msgtype == 4 || mm->msgtype == 20) {
-        printf("DF %d: %s, Altitude Reply.\n", mm->msgtype,
-            (mm->msgtype == 4) ? "Surveillance" : "Comm-B");
+    } else if (mm->msgtype == 4 || mm->msgtype == 5
+	  || mm->msgtype == 20 || mm->msgtype == 21) {
+		int is_idtype = mm->msgtype == 5 || mm->msgtype == 21;
+		int is_surveillance = mm->msgtype == 4 || mm->msgtype == 5;
+        printf("DF %d: %s, %s.\n", mm->msgtype, is_surveillance ? "Surveillance" : "Comm-B", is_idtype ? "Identity Reply" : "Altitude Reply");
         printf("  Flight Status  : %s\n", fs_str[mm->fs]);
         printf("  DR             : %d\n", ((mm->msg[1] >> 3) & 0x1F));
         printf("  UM             : %d\n", (((mm->msg[1]  & 7) << 3) | (mm->msg[2] >> 5)));
-        printf("  Altitude       : %d %s\n", mm->altitude,
-            (mm->unit == MODES_UNIT_METERS) ? "meters" : "feet");
+		if (is_idtype) {
+			printf("  Squawk         : %04x\n", mm->modeA);
+		} else {
+			printf("  Altitude       : %d %s\n", mm->altitude, (mm->unit == MODES_UNIT_METERS) ? "meters" : "feet");
+		}
         printf("  ICAO Address   : %06x\n", mm->addr);
-
-        if (mm->msgtype == 20) {
+		
+		if (!is_surveillance) {
             printf("  Comm-B BDS     : %x\n", mm->msg[4]);
 
             // Decode the extended squitter message
             if        ( mm->msg[4]       == 0x20) { // BDS 2,0 Aircraft identification
                 printf("    BDS 2,0 Aircraft Identification : %s\n", mm->flight);
+            } else if ( mm->msg[4]       == 0x10) { // BDS 1,0 Datalink Capability report
+				int i;
+                printf("    BDS 1,0 Datalink Capability report\n");
+				printf("      Continuation                       : %s\n", (mm->msg[5] & 0x80) ? "Yes" : "No");
+				printf("      Mode S Subnetwork Version          : %d\n", mm->msg[6] >> 1);
+				printf("      Enhanced Protocol Indicator        : %s\n", (mm->msg[6] & 1) ? "Level 5" : "Level 2 to 4");
+				printf("      Mode S Specific Services capability: %s\n", (mm->msg[7] & 0x80) ? "True" : "False");
+				printf("      Uplink ELM avg throughput index    : %d\n", (mm->msg[7] >> 4) & 7);
+				printf("      Downlink ELM avg throughput index  : %d\n", mm->msg[7] & 0x0F);
+				printf("      Aircraft Identification capability : %s\n", (mm->msg[8] & 0x80) ? "True" : "False");
+				printf("      Squitter capability                : %s\n", (mm->msg[8] & 0x40) ? "True" : "False");
+				printf("      SIC capability                     : %s\n", (mm->msg[8] & 0x20) ? "True" : "False");
+				printf("      GICB capability report changed     : %s\n", (mm->msg[8] & 0x10) ? "Yes" : "No");
+				for (i = 0; i < 16; i++) {
+					printf("      DTE Sub-address %d supported: %s\n", i, (mm->msg[9+((i>7)?1:0)] & (int)pow(2, (7 - (i%8)))) ? "True" : "False");
+				}
+			}
 /*
             } else if ( mm->msg[4]       == 0x10) { // BDS 1,0 Datalink Capability report
                 printf("    BDS 1,0 Datalink Capability report\n");
@@ -1323,42 +1345,7 @@ void displayModesMessage(struct modesMessage *mm) {
             } else if ((mm->msg[4] >> 3) ==   31) { // BDS 6,5 Extended Squitter Aircraft Operational Status
                 printf("    BDS 6,5 Aircraft Operational Status\n");
 */
-            }        
-        }
-
-    } else if (mm->msgtype == 5 || mm->msgtype == 21) {
-        printf("DF %d: %s, Identity Reply.\n", mm->msgtype,
-            (mm->msgtype == 5) ? "Surveillance" : "Comm-B");
-        printf("  Flight Status  : %s\n", fs_str[mm->fs]);
-        printf("  DR             : %d\n", ((mm->msg[1] >> 3) & 0x1F));
-        printf("  UM             : %d\n", (((mm->msg[1]  & 7) << 3) | (mm->msg[2] >> 5)));
-        printf("  Squawk         : %04x\n", mm->modeA);
-        printf("  ICAO Address   : %06x\n", mm->addr);
-
-        if (mm->msgtype == 21) {
-            printf("  Comm-B BDS     : %x\n", mm->msg[4]);
-
-            // Decode the extended squitter message
-            if        ( mm->msg[4]       == 0x20) { // BDS 2,0 Aircraft identification
-                printf("    BDS 2,0 Aircraft Identification : %s\n", mm->flight);
-/*
-            } else if ( mm->msg[4]       == 0x10) { // BDS 1,0 Datalink Capability report
-                printf("    BDS 1,0 Datalink Capability report\n");
-
-            } else if ( mm->msg[4]       == 0x30) { // BDS 3,0 ACAS Active Resolution Advisory
-                printf("    BDS 3,0 ACAS Active Resolution Advisory\n");
-
-            } else if ((mm->msg[4] >> 3) ==   28) { // BDS 6,1 Extended Squitter Emergency/Priority Status
-                printf("    BDS 6,1 Emergency/Priority Status\n");
-
-            } else if ((mm->msg[4] >> 3) ==   29) { // BDS 6,2 Target State and Status
-                printf("    BDS 6,2 Target State and Status\n");
-
-            } else if ((mm->msg[4] >> 3) ==   31) { // BDS 6,5 Extended Squitter Aircraft Operational Status
-                printf("    BDS 6,5 Aircraft Operational Status\n");
-*/
-            }        
-        }
+		}
 
     } else if (mm->msgtype == 11) { // DF 11
         printf("DF 11: All Call Reply.\n");
