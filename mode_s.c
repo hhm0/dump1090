@@ -1423,28 +1423,34 @@ void displayModesMessage(struct modesMessage *mm) {
 
 			} else if (mm->metype == 19) { // Airborne Velocity
 				if ((mm->mesub >= 1) && (mm->mesub <= 4)) {
-					printf("    Intent Change      : %s\n", ((mm->msg[5] & 0x80) ? "Yes" : "No"));
-					printf("    NACv               : %s\n", nacv_str[((mm->msg[5] & 0x38) >> 3)]);
+					printf("    Intent Change       : %s\n", ((mm->msg[5] & 0x80) ? "Yes" : "No"));
+					printf("    NACv                : %s\n", nacv_str[((mm->msg[5] & 0x38) >> 3)]);
 					if (mm->mesub == 1 || mm->mesub == 2) {
-						printf("    Supersonic         : %s\n", (mm->mesub == 2)  ? "Yes" : "No");
-						printf("    EW status          : %s\n", (mm->bFlags & MODES_ACFLAGS_EWSPEED_VALID)  ? "Valid" : "Unavailable");
-						printf("    EW velocity        : %d\n", mm->ew_velocity);
-						printf("    NS status          : %s\n", (mm->bFlags & MODES_ACFLAGS_NSSPEED_VALID)  ? "Valid" : "Unavailable");
-						printf("    NS velocity        : %d\n", mm->ns_velocity);
+						printf("    Supersonic          : %s\n", (mm->mesub == 2)  ? "Yes" : "No");
+						printf("    EW status           : %s\n", (mm->bFlags & MODES_ACFLAGS_EWSPEED_VALID)  ? "Valid" : "Unavailable");
+						if (mm->bFlags & MODES_ACFLAGS_EWSPEED_VALID)
+							printf("    EW velocity         : %d\n", mm->ew_velocity);
+						printf("    NS status           : %s\n", (mm->bFlags & MODES_ACFLAGS_NSSPEED_VALID)  ? "Valid" : "Unavailable");
+						if (mm->bFlags & MODES_ACFLAGS_NSSPEED_VALID)
+							printf("    NS velocity         : %d\n", mm->ns_velocity);
 
 					} else if (mm->mesub == 3 || mm->mesub == 4) {
-						printf("    Supersonic         : %s\n", (mm->mesub == 4)  ? "Yes" : "No");
-						printf("    Heading status     : %s\n", (mm->bFlags & MODES_ACFLAGS_HEADING_VALID)  ? "Valid" : "Unavailable");
-						printf("    Heading            : %.1f\n", mm->heading);
-						printf("    Airspeed type      : %s\n", ((mm->msg[7] & 0x80) ? "True Airspeed (TAS)" : "Indicated Airspeed (IAS)"));
+						printf("    Supersonic          : %s\n", (mm->mesub == 4)  ? "Yes" : "No");
+						printf("    Heading status      : %s\n", (mm->bFlags & MODES_ACFLAGS_HEADING_VALID)  ? "Valid" : "Unavailable");
+						if (mm->bFlags & MODES_ACFLAGS_SPEED_VALID)
+							printf("    Heading            : %.1f\n", mm->heading);
+						printf("    Airspeed type       : %s\n", ((mm->msg[7] & 0x80) ? "True Airspeed (TAS)" : "Indicated Airspeed (IAS)"));
 						printf("    Airspeed status    : %s\n", (mm->bFlags & MODES_ACFLAGS_SPEED_VALID)    ? "Valid" : "Unavailable");
-						printf("    Airspeed           : %.1f\n", mm->velocity);
+						if (mm->bFlags & MODES_ACFLAGS_SPEED_VALID)
+							printf("    Airspeed            : %.1f\n", mm->velocity);
 					}
-					printf("    Vertical status    : %s\n", (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) ? "Valid" : "Unavailable");
-					printf("    Vertical rate src  : %s\n", ((mm->msg[8] & 0x10) ? "Baro" : "Geo"));
-					printf("    Vertical rate      : %d\n", mm->vert_rate);
+					printf("    Vertical rate src   : %s\n", ((mm->msg[8] & 0x10) ? "Baro" : "Geo"));
+					printf("    Vertical status     : %s\n", (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) ? "Valid" : "Unavailable");
+					if (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID)
+						printf("    Vertical rate       : %d\n", mm->vert_rate);
+					printf("    Geo-baro status     : %s\n", (mm->bFlags & MODES_ACFLAGS_VERTRATE_VALID) ? "Valid" : "Unavailable");
 					if (mm->bFlags |= MODES_ACFLAGS_BHDIFF_VALID) {
-						printf("    Geo-baro difference: %d feet\n", mm->bh_diff);
+						printf("    Geo-baro difference : %d feet\n", mm->bh_diff);
 					}
 				} else {
 					printf("    Unrecognized ME subtype: %d subtype: %d\n", mm->metype, mm->mesub);
