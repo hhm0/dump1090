@@ -762,6 +762,25 @@ int decodeSignMultField(int data_in, int sign, int mult, int *flags, int flagbit
 //
 //=========================================================================
 //
+// Decode an AIS 6-bit charset string
+//
+char *decodeAisString(unsigned char *msg, int bit_offset, int num_symbols, char *outstring) {
+    char *ais_charset = "?ABCDEFGHIJKLMNOPQRSTUVWXYZ????? ???????????????0123456789??????";
+	int bit_index, i;
+	div_t bc;
+
+	bit_index = bit_offset;
+	for (i = 0; i < num_symbols; i++) {
+		bc = div(bit_index, 8);
+		outstring[i] = ais_charset[((bc.rem < 3) ? (msg[bc.quot] >> (2 - bc.rem)) : ((msg[bc.quot] << (bc.rem - 2)) | (msg[bc.quot+1] >> (10 - bc.rem)))) & 0x3F];
+		bit_index += 6;
+	}
+	outstring[num_symbols] = '\0';
+	return outstring;
+}
+//
+//=========================================================================
+//
 // Capability table
 char *ca_str[8] = {
     /* 0 */ "Level 1 (Surveillance Only)",
@@ -911,8 +930,6 @@ char *getMEDescription(int metype, int mesub) {
 // and split it into fields populating a modesMessage structure.
 //
 void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
-    char *ais_charset = "?ABCDEFGHIJKLMNOPQRSTUVWXYZ????? ???????????????0123456789??????";
-
     // Work on our local copy
     memcpy(mm->msg, msg, MODES_LONG_MSG_BYTES);
     msg = mm->msg;
@@ -1058,22 +1075,9 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
         // Decode the extended squitter message
 
 		if (metype >= 1 && metype <= 4) { // Aircraft Identification and Category
-            uint32_t chars;
             mm->bFlags |= MODES_ACFLAGS_CALLSIGN_VALID;
 
-            chars = (msg[5] << 16) | (msg[6] << 8) | (msg[7]);
-            mm->flight[3] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[2] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[1] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[0] = ais_charset[chars & 0x3F];
-
-            chars = (msg[8] << 16) | (msg[9] << 8) | (msg[10]);
-            mm->flight[7] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[6] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[5] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[4] = ais_charset[chars & 0x3F];
-
-            mm->flight[8] = '\0';
+            decodeAisString(msg, 40, 8, mm->flight);
 
             mm->bFlags |= MODES_ACFLAGS_ACCAT_VALID;
 			mm->accat[0] = ('A' + 4) - mm->metype;
@@ -1222,22 +1226,9 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
     if ((mm->msgtype == 20) || (mm->msgtype == 21)){
 
         if (msg[4] == 0x20) { // Aircraft Identification
-            uint32_t chars;
             mm->bFlags |= MODES_ACFLAGS_CALLSIGN_VALID;
 
-            chars = (msg[5] << 16) | (msg[6] << 8) | (msg[7]);
-            mm->flight[3] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[2] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[1] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[0] = ais_charset[chars & 0x3F];
-
-            chars = (msg[8] << 16) | (msg[9] << 8) | (msg[10]);
-            mm->flight[7] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[6] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[5] = ais_charset[chars & 0x3F]; chars = chars >> 6;
-            mm->flight[4] = ais_charset[chars & 0x3F];
-
-            mm->flight[8] = '\0';
+            decodeAisString(msg, 40, 8, mm->flight);
         } else {
         }
     }
